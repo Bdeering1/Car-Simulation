@@ -18,7 +18,10 @@ struct Engine {
 }
 
 impl Engine {
-
+    // t = (x-1000) / 7000
+    // y = (v1)(1-t)^3 + (v2)(3t)(1-t)^2 + (v3)(3t^2)(1-t) + (v4)(t^3)
+    // v1 = 200, v2 = 274, v3 = 380, v4 = 225
+    
 }
 
 
@@ -40,19 +43,6 @@ impl Wheels {
 }
 
 
-struct Differential {
-
-}
-
-impl Differential {
-
-}
-
-
-struct Brakes {
-
-}
-
-impl Brakes {
+trait Brakes {
 
 }
