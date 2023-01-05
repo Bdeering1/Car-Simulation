@@ -5,10 +5,10 @@ pub struct Car {
     pub engine: Engine,
     pub transmission: Transmission,
     pub wheels: Wheels,
-    pub velocity: (f32, f32), // top speed should be 320 km/h
+    pub velocity: (f32, f32),
     pub acceleration: (f32, f32),
-    pub mass: f32, // 1587.12 kg
-    pub drag_coefficient: f32, // 0.34
+    pub mass: f32,
+    pub drag_coefficient: f32,
     pub rr_coefficient: f32,
     pub drive_force: f32,
     pub drag: f32,
@@ -16,25 +16,24 @@ pub struct Car {
 }
 
 impl Car {
-    
-    pub fn new(engine: Engine, transmission: Transmission, wheels: Wheels) -> Self {
+    pub fn new(engine: Engine, transmission: Transmission, wheels: Wheels, mass: f32, drag_coefficient: f32, rr_coefficient: f32) -> Self {
         Self {
             engine,
             transmission,
             wheels,
             velocity: (0.0, 0.0),
             acceleration: (0.0, 0.0),
-            mass: 1587.12,
-            drag_coefficient: 0.34,
-            rr_coefficient: 10.2,
+            mass,
+            drag_coefficient,
+            rr_coefficient,
             drive_force: 0.0,
             drag: 0.0,
             rolling_res: 0.0,
         }
     }
-    
+
     pub fn update(&mut self, dt: f32) {
-        const PARASITIC_LOSSES: f32 = 0.7;
+        const DRIVE_TRAIN_EFFICIENCY: f32 = 0.75;
 
         if self.engine.rpm > 8000 && self.transmission.gear < self.transmission.max_gear { self.transmission.gear += 1; }
 
@@ -43,20 +42,21 @@ impl Car {
         } else {
             self.drive_force = self.wheels.get_force(self.engine.get_torque(1.0) * self.transmission.get_ratio());
         }
-        self.drive_force *= PARASITIC_LOSSES;
+        self.drive_force *= DRIVE_TRAIN_EFFICIENCY;
         self.drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
         self.rolling_res = self.velocity.0 * self.rr_coefficient;
         self.drive_force -= self.drag + self.rolling_res;
 
         self.acceleration.0 = self.drive_force / self.mass; // m/s^2
         self.velocity.0 += self.acceleration.0 * dt; // m/s
-        
+
         self.engine.rpm = ((self.velocity.0 / (2.0 * PI * self.wheels.radius) // wheel rev/s
                             * self.transmission.get_ratio() * 60.0) as u32) // engine rpm
                             .clamp(self.engine.idle_rpm, self.engine.max_rpm);
 
     }
 }
+
 
 impl Display for Car {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { 
@@ -86,9 +86,6 @@ impl Engine {
         }
     }
 
-    // t = (x-1000) / 7000
-    // y = (v1)(1-t)^3 + (v2)(3t)(1-t)^2 + (v3)(3t^2)(1-t) + (v4)(t^3)
-    // v1 = 200, v2 = 274, v3 = 380, v4 = 225
     pub fn get_torque(&mut self, throttle: f32) -> f32 {
         const FTLB_PER_NM: f32 = 1.35582;
 
@@ -116,7 +113,7 @@ pub struct Transmission {
 impl Transmission {
     pub fn new(diff_ratio: f32, gear_ratios: Vec<f32>) -> Self {
         Self {
-            max_gear: gear_ratios.len() as u8,
+            max_gear: (gear_ratios.len() - 1) as u8,
             gear_ratios,
             diff_ratio,
             gear: 1,
