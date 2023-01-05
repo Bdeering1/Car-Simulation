@@ -1,9 +1,9 @@
 mod car;
 mod templates;
 
+use std::{thread, time};
 use car::Car;
 use templates::{Templates, CarType};
-use std::{thread, time};
 
 fn main() {
     let mut car = Car::from_template(CarType::TeslaSPlaid);
