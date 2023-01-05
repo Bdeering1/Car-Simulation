@@ -13,6 +13,7 @@ pub struct Car {
     pub drive_force: f32,
     pub drag: f32,
     pub rolling_res: f32,
+    pub hp: f32,
 }
 
 impl Car {
@@ -29,6 +30,7 @@ impl Car {
             drive_force: 0.0,
             drag: 0.0,
             rolling_res: 0.0,
+            hp: 0.0,
         }
     }
 
@@ -54,13 +56,14 @@ impl Car {
                             * self.transmission.get_ratio() * 60.0) as u32) // engine rpm
                             .clamp(self.engine.idle_rpm, self.engine.max_rpm);
 
+        self.hp = (self.engine.get_torque(1.0) / 1.35582) * self.engine.rpm as f32 / 5252.0;
     }
 }
 
 
 impl Display for Car {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { 
-        f.write_str(format!("vel: {:.2} km/h acc: {:.2} m/s^2 drag: {:.2} N rolling res: {:.2} N {} {}", self.velocity.0 * 3.6, self.acceleration.0, self.drag, self.rolling_res, self.engine, self.transmission).as_str())?;
+        f.write_str(format!("vel: {:.2} km/h acc: {:.2} m/s^2 drive force: {} N hp: {} drag: {:.2} N rolling res: {:.2} N {} {}", self.velocity.0 * 3.6, self.acceleration.0, self.drive_force, self.hp, self.drag, self.rolling_res, self.engine, self.transmission).as_str())?;
         Ok(())
     }
 }
@@ -87,11 +90,11 @@ impl Engine {
     }
 
     pub fn get_torque(&mut self, throttle: f32) -> f32 {
-        const FTLB_PER_NM: f32 = 1.35582;
+        const LBFT_PER_NM: f32 = 1.35582;
 
         let t: f32 = (self.rpm - self.idle_rpm) as f32 / self.rpm_range as f32;
         let (v1, v2, v3, v4) = self.torque_curve;
-        self.torque = ((v1 * (1.0-t).powf(3.0)) + (v2 * (3.0*t) * (1.0-t).powf(2.0)) + (v3 * 3.0 * t.powf(2.0) * (1.0-t)) + (v4 * t.powf(3.0))) * throttle * FTLB_PER_NM;
+        self.torque = ((v1 * (1.0-t).powf(3.0)) + (v2 * (3.0*t) * (1.0-t).powf(2.0)) + (v3 * 3.0 * t.powf(2.0) * (1.0-t)) + (v4 * t.powf(3.0))) * throttle * LBFT_PER_NM;
         self.torque // Nm
     }
 }
