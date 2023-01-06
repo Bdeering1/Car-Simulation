@@ -6,7 +6,7 @@ use car::Car;
 use templates::{Templates, CarType};
 
 fn main() {
-    let mut car = Car::from_template(CarType::TeslaSPlaid);
+    let mut car = Car::from_template(CarType::AudiR8);
     car.transmission.gear = 2;
 
     let mut time_passed: f32 = 0.0;

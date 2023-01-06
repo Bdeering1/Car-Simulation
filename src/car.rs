@@ -4,7 +4,7 @@ use std::f64::consts::PI as PI;
 pub struct Car {
     pub engine: Engine,
     pub transmission: Transmission,
-    pub wheels: Wheels,
+    pub chassis: Chassis,
     pub velocity: (f64, f64),
     pub acceleration: (f64, f64),
     pub mass: f64,
@@ -17,14 +17,14 @@ pub struct Car {
 }
 
 impl Car {
-    pub fn new(engine: Engine, transmission: Transmission, wheels: Wheels, mass: f64, drag_coefficient: f64, rr_coefficient: f64) -> Self {
+    pub fn new(engine: Engine, transmission: Transmission, chassis: Chassis, drag_coefficient: f64, rr_coefficient: f64) -> Self {
         Self {
+            mass: chassis.static_load.0 + chassis.static_load.1,
             engine,
             transmission,
-            wheels,
+            chassis,
             velocity: (0.0, 0.0),
             acceleration: (0.0, 0.0),
-            mass,
             drag_coefficient,
             rr_coefficient,
             drive_force: 0.0,
@@ -42,7 +42,7 @@ impl Car {
         if self.engine.rpm == self.engine.max_rpm {
             self.drive_force = 0.0
         } else {
-            self.drive_force = self.wheels.get_force(self.engine.get_torque(1.0) * self.transmission.get_ratio());
+            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(1.0) * self.transmission.get_ratio()).0;
         }
         self.drive_force *= DRIVE_TRAIN_EFFICIENCY;
         self.drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
@@ -52,7 +52,7 @@ impl Car {
         self.acceleration.0 = self.drive_force / self.mass; // m/s^2
         self.velocity.0 += self.acceleration.0 * dt; // m/s
 
-        self.engine.rpm = ((self.velocity.0 / (2.0 * PI * self.wheels.radius) // wheel rev/s
+        self.engine.rpm = ((self.velocity.0 / (2.0 * PI * self.chassis.front_wheels.radius) // wheel rev/s
                             * self.transmission.get_ratio() * 60.0) as u32) // engine rpm
                             .clamp(self.engine.idle_rpm, self.engine.max_rpm);
 
@@ -133,32 +133,40 @@ impl Display for Transmission {
     }
 }
 
+
+
+#[derive(PartialEq)]
+pub enum DriveWheels {
+    Front, 
+    Rear,
+    All
+}
+
 pub struct Chassis {
-    front_wheels: Wheels,
-    rear_wheels: Wheels,
+    pub front_wheels: WheelPair,
+    pub rear_wheels: WheelPair,
     wheel_base: f64,
     cg_height: f64,
-    static_load: (f64, f64), //(front, rear)
+    static_load: (f64, f64), // front, rear
     torque_dist: (f64, f64)
 }
 
 impl Chassis {
-
     pub fn new(wheel_radius: f64, wheel_base: f64, cg_height: f64, weight_ratio: f64, weight: f64, drive_wheels: DriveWheels) -> Self {
-        let front_wheels = Wheels::new(wheel_radius, drive_wheels == DriveWheels::Front || drive_wheels == DriveWheels::All);
-        let rear_wheels = Wheels::new(wheel_radius, drive_wheels == DriveWheels::Rear || drive_wheels == DriveWheels::All);
+        let front_wheels = WheelPair::new(wheel_radius, drive_wheels == DriveWheels::Front || drive_wheels == DriveWheels::All);
+        let rear_wheels = WheelPair::new(wheel_radius, drive_wheels == DriveWheels::Rear || drive_wheels == DriveWheels::All);
         Chassis {
             front_wheels,
             rear_wheels,
             wheel_base,
             cg_height,
-            static_load: (weight * weight_ratio, weight * (1.0-weight_ratio)),
-            torque_dist: (match drive_wheels {DriveWheels::Front => 1.0, DriveWheels::All => 0.5, _ => 0.0},
-                          match drive_wheels {DriveWheels::Rear => 1.0, DriveWheels::All => 0.5, _ => 0.0},)
+            static_load: (weight * weight_ratio, weight * (1.0 - weight_ratio)),
+            torque_dist: (match drive_wheels { DriveWheels::Front => 1.0, DriveWheels::All => 0.5, _ => 0.0 },
+                          match drive_wheels { DriveWheels::Rear => 1.0, DriveWheels::All => 0.5, _ => 0.0 },)
         }
     }
 
-    pub fn get_force(&self, drive_force: f64, torque: f64) -> (f64, f64) {
+    pub fn get_wheel_force(&self, drive_force: f64, torque: f64) -> (f64, f64) {
         let (front_load, rear_load) = self.distribute_weight(drive_force);
         let (front_force, rear_force) = (self.front_wheels.get_force(torque * self.torque_dist.0, front_load), 
                                                    self.rear_wheels.get_force(torque * self.torque_dist.1, rear_load));
@@ -167,21 +175,20 @@ impl Chassis {
     }
 
     fn distribute_weight(&self, drive_force: f64) -> (f64, f64) {
-        let shift_to_rear = (self.cg_height/self.wheel_base) * drive_force;
+        let shift_to_rear = (self.cg_height / self.wheel_base) * drive_force;
         
         (self.static_load.0 - shift_to_rear, self.static_load.1 + shift_to_rear)
     }
 
 }
 
-pub struct Wheels {
-    //rad/s = rpm * 0.10472
-    pub wheel_rpm: f64,
+pub struct WheelPair {
     pub radius: f64, // meters
+    pub wheel_rpm: f64,
     pub is_drive_wheel: bool,
 }
 
-impl Wheels {
+impl WheelPair {
     pub fn new(radius: f64, is_drive_wheel: bool) -> Self {
         Self {
             wheel_rpm: 0.0,
@@ -190,12 +197,13 @@ impl Wheels {
         }
     }
 
-    pub fn get_force(&self, torque: f64, axle_load: f64) -> f64 {
+    pub fn get_force(&self, torque: f64, load: f64) -> f64 {
         torque / self.radius // N
     }
 
     fn get_slip(&self, car_velocity: (f64, f64)) -> f64 {
         const RPM_TO_RADS: f64 = 0.10472;
+
         let (vel1, _) = car_velocity;
         let ang_vel: f64 = self.wheel_rpm * RPM_TO_RADS;
 
@@ -203,18 +211,11 @@ impl Wheels {
     }
 }
 
-#[derive(PartialEq)]
-enum DriveWheels {
-    Front, 
-    Rear,
-    All
-}
-
 
 trait Brakes {
     // who needs these?
 }
 
-impl Brakes for Wheels {
+impl Brakes for WheelPair {
 
 }
