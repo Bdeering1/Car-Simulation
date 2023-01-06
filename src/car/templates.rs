@@ -1,5 +1,6 @@
 use libm::tanh;
-use crate::car::{Car, Engine, Transmission, Chassis, DriveWheels};
+use crate::car::{Car, Engine, Transmission, Chassis};
+use crate::car::chassis::DriveWheels;
 
 #[allow(dead_code)]
 pub enum CarType {
