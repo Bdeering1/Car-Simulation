@@ -3,11 +3,11 @@ use std::fmt::Display as Display;
 use libm::powf;
 
 pub struct WheelPair {
+    pub is_drive_wheel: bool,
+    pub mass: f64,
     pub radius: f64, // meters
     pub ang_vel: f64, //rads/s
-    pub mass: f64,
     pub inertia: f64,
-    pub is_drive_wheel: bool,
     pub traction: f64,
     pub slip_ratio: f64
 }
@@ -15,11 +15,11 @@ pub struct WheelPair {
 impl WheelPair {
     pub fn new(radius: f64, mass: f64, is_drive_wheel: bool) -> Self {
         Self {
-            ang_vel: 0.0,
-            radius,
-            mass,
-            inertia: (mass * powf(radius as f32, 2.0) as f64) / 2.0, //inertia of a cylinder = mass * radius^2 / 2
             is_drive_wheel,
+            mass,
+            radius,
+            ang_vel: 0.0,
+            inertia: (mass * powf(radius as f32, 2.0) as f64) / 2.0, //inertia of a cylinder = mass * radius^2 / 2
             traction: 0.0,
             slip_ratio: 0.0,
         }
@@ -64,7 +64,6 @@ impl WheelPair {
         let traction_force = f64::min(1.0,
              (powf((7.19577 * slip) as f32, 0.655221) - 27.9498 * powf((slip + 0.961159) as f32, 0.290593) + 27.6299) as f64);
         
-        
         traction_force * load * 1.2 * self.radius
     }
 }
@@ -77,7 +76,7 @@ impl Display for WheelPair {
 }
 
 trait Brakes {
-    // who needs these?
+
 }
 
 impl Brakes for WheelPair {
