@@ -37,8 +37,8 @@ impl Chassis {
 
     pub fn get_wheel_force(&mut self, drive_force: f64, torque: f64, car_vel: (f64, f64), dt: f64) -> (f64, f64) {
         let (front_load, rear_load) = self.distribute_weight(drive_force);
-        let (front_force, rear_force) = (self.front_wheels.get_force(torque * self.torque_dist.0, front_load, car_vel, dt), 
-                                                   self.rear_wheels.get_force(torque * self.torque_dist.1, rear_load, car_vel, dt));
+        let (front_force, rear_force) = (self.front_wheels.get_force(torque * self.torque_dist.0, front_load * 9.8, car_vel, dt), 
+                                                   self.rear_wheels.get_force(torque * self.torque_dist.1, rear_load * 9.8, car_vel, dt));
 
         (front_force + rear_force, 0.0)
     }
