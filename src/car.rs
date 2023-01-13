@@ -45,19 +45,21 @@ impl Car {
 
     pub fn update(&mut self, dt: f64) {
         const DRIVE_TRAIN_EFFICIENCY: f64 = 0.75;
+        const RAD_PER_S_TO_RPM: f64 = 9.5492965964254;
+        let throttle: f64 = 0.1;
 
         if self.engine.rpm > 8000 && self.transmission.gear < self.transmission.max_gear { self.transmission.gear += 1; }
 
         if self.engine.rpm == self.engine.max_rpm {
             self.drive_force = 0.0
         } else {
-            let force_v:f64 = self.engine.get_torque(0.1) * self.transmission.get_ratio() * self.chassis.rear_wheels.radius;
-            let drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
-            let rolling_res = self.velocity.0 * self.rr_coefficient;
-            let drive_force = force_v - (drag + rolling_res);
-            let acc = drive_force/self.mass;
-            let virtual_vel:(f64, f64) = (self.velocity.0 + acc, 0.0);
-            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(0.1) * self.transmission.get_ratio(), virtual_vel, dt).0;
+            // let force_v:f64 = self.engine.get_torque(0.1) * self.transmission.get_ratio() * self.chassis.rear_wheels.radius;
+            // let drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
+            // let rolling_res = self.velocity.0 * self.rr_coefficient;
+            // let drive_force = force_v - (drag + rolling_res);
+            // let acc = drive_force/self.mass;
+            // let virtual_vel:(f64, f64) = (self.velocity.0 + acc, 0.0);
+            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(throttle) * self.transmission.get_ratio(), self.velocity, dt).0;
         }
         self.drive_force *= DRIVE_TRAIN_EFFICIENCY;
         self.drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
@@ -68,16 +70,15 @@ impl Car {
         self.velocity.0 += self.acceleration.0 * dt; // m/s
 
         let drive_wheel_rpm: f64 = match self.chassis.drive_wheels {
-            DriveWheels::Front => self.chassis.front_wheels.ang_vel * 9.549296585513721,
-            DriveWheels::Rear => self.chassis.rear_wheels.ang_vel * 9.549296585513721,
-            DriveWheels::All => self.chassis.rear_wheels.ang_vel * 9.549296585513721, //TODO: avg velocity between both sets of wheels
+            DriveWheels::Front => self.chassis.front_wheels.ang_vel * RAD_PER_S_TO_RPM,
+            DriveWheels::Rear => self.chassis.rear_wheels.ang_vel * RAD_PER_S_TO_RPM,
+            DriveWheels::All => self.chassis.rear_wheels.ang_vel * RAD_PER_S_TO_RPM, //TODO: avg velocity between both sets of wheels
         };
 
-        self.engine.rpm = ((drive_wheel_rpm /* wheel rev/s */ 
-                            * self.transmission.get_ratio() * 60.0) as u32) // engine rpm
+        self.engine.rpm = ((drive_wheel_rpm * self.transmission.get_ratio()) as u32) // engine rpm
                             .clamp(self.engine.idle_rpm, self.engine.max_rpm);
 
-        self.hp = (self.engine.get_torque(1.0) / 1.35582) * self.engine.rpm as f64 / 5252.0;
+        self.hp = (self.engine.get_torque(throttle) / 1.35582) * self.engine.rpm as f64 / 5252.0;
     }
 }
 
