@@ -1,4 +1,4 @@
-use std::fmt::Display as Display;
+use std::{fmt::Display as Display};
 
 use libm::powf;
 
@@ -30,10 +30,14 @@ impl WheelPair {
         //println!("{}", self.slip_ratio);
         self.traction = self.get_traction(down_force, self.slip_ratio);
 
+        if torque == 0.0 {
+            return 0.0;
+        }
+
         let traction_torque = self.traction * self.radius;
         self.calc_wheel_acceleration(traction_torque, torque, 0.0 /* TODO: add brakes */, dt);
 
-        if self.traction == 0.0 { torque / self.radius } else { f64::min(torque / self.radius, self.traction) }
+        self.traction
     }
 
     fn get_slip(&self, car_velocity: (f64, f64)) -> f64 {
@@ -46,16 +50,21 @@ impl WheelPair {
         let total_torque = torque - traction_torque - brake_torque;
         // ^ this might be wrong (frequently results in a negative wheel acceleration)
         // also if torque == traction torque (perfect traction) then total torque = 0 and therefore acceleration = 0
+
         //println!("total torque: {} torque: {} traction torque: {}", total_torque, torque, traction_torque);
-        let wheel_acceleration = total_torque / self.inertia;
+        let wheel_acceleration = total_torque / self.inertia; //rads/s^2
+        println!("{}, {}", wheel_acceleration, self.ang_vel);
         self.ang_vel += wheel_acceleration * dt;
     }
 
     fn get_traction(&self, down_force: f64, slip_ratio: f64) -> f64 { // traction in longitudinal force (N)
-        let traction_force: f64 = (200.0 * slip_ratio).clamp(-1200.0, 1200.0);
-        // ^ this shouldn't be a "force" value because otherwise the units N*N -> N^2
+        // for the case where the car is not moving, at the instant it starts moving we just give it "perfect" traction to get it started
+        if slip_ratio <= f64::EPSILON {
+            return 1200.0;
+        }
+        let traction: f64 = (200.0 * slip_ratio).clamp(-1200.0, 1200.0);
         
-        traction_force * down_force / 1000.0
+        traction * (down_force / 1000.0)
     }
 }
 

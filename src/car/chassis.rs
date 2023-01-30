@@ -40,6 +40,7 @@ impl Chassis {
         let (front_force, rear_force) = (self.front_wheels.get_force(torque * self.torque_dist.0, front_load * 9.8, car_vel, dt), 
                                                    self.rear_wheels.get_force(torque * self.torque_dist.1, rear_load * 9.8, car_vel, dt));
 
+        //println!("{}, {}", front_force, rear_force);
         (front_force + rear_force, 0.0)
     }
 
