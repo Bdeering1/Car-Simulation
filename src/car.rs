@@ -85,7 +85,7 @@ impl Car {
 
 impl Display for Car {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { 
-        f.write_str(format!("vel: {:.2} km/h acc: {:.2} m/s^2 drive force: {} N hp: {} drag: {} N rolling res: {} N {} {} {}", self.velocity.0 * 3.6, self.acceleration.0, self.drive_force as i32, self.hp as i32, self.drag as i32, self.rolling_res as i32, self.engine, self.transmission, self.chassis.rear_wheels).as_str())?;
+        f.write_str(format!("vel: {:.2} km/h acc: {:.2} m/s^2 drive force: {} N hp: {} drag: {} N rolling res: {} N {} {} {}", self.velocity.0 * 3.6, self.acceleration.0, self.drive_force as i32, self.hp as i32, self.drag as i32, self.rolling_res as i32, self.engine, self.transmission, self.chassis.front_wheels).as_str())?;
         Ok(())
     }
 }
