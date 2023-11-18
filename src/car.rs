@@ -44,13 +44,14 @@ impl Car {
 
     pub fn update(&mut self, dt: f64) {
         const DRIVE_TRAIN_EFFICIENCY: f64 = 0.75;
+        let throttle: f64 = 1.0; 
 
         if self.engine.rpm > 8000 && self.transmission.gear < self.transmission.max_gear { self.transmission.gear += 1; }
 
         if self.engine.rpm == self.engine.max_rpm {
-            self.drive_force = 0.0
+            self.drive_force = 0.0  // simulate limiter
         } else {
-            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(1.0) * self.transmission.get_ratio()).0;
+            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(throttle) * self.transmission.get_ratio()).0;
         }
         self.drive_force *= DRIVE_TRAIN_EFFICIENCY;
         self.drag = self.velocity.0.powf(2.0) * self.drag_coefficient;

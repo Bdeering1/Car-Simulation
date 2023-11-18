@@ -13,7 +13,7 @@ impl Transmission {
             max_gear: (gear_ratios.len() - 1) as u8,
             gear_ratios,
             diff_ratio,
-            gear: 1,
+            gear: 1, // 0 = reverse, 1 = neutral, 2 = first, etc.
         }
     }
 

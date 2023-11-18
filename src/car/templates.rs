@@ -20,11 +20,12 @@ impl Templates for Car {
             // https://www.caranddriver.com/audi/r8/specs
             // https://www.autoblog.com/2009/08/31/first-drive-2010-audi-r8-v10-answers-our-power-prayers/
             // http://www.goapr.com.mt/products/ecu_upgrade_52fsi_r8.html
+            // https://www.carsguide.com.au/audi/r8/car-dimensions/2018
             CarType::AudiR8 => {
                 let torque_curve = |rpm| -4371.57 * ((1.0 / 12600.0) * rpm as f64 - 1.0).powf(3.0) - 0.0000588218 * (rpm as f64 - 1.0).powf(2.0) + rpm as f64 - 4082.43;
                 let engine = Engine::new(1000, 8700, torque_curve);
                 let transmission = Transmission::new(3.59 ,vec![-2.65, 0.0, 3.133, 2.588, 1.880, 1.140, 0.898, 0.884, 0.653]);
-                let chassis = Chassis::new(0.254, 2.64922, 0.0 /*??*/, 0.44, 1587.12, DriveWheels::Front);
+                let chassis = Chassis::new(0.254, 2.64922, 1.23, 0.44, 1587.12, DriveWheels::Front);
                 Car::new(engine, transmission, chassis, 0.34, 10.2) 
             },
             // 0-60 mph: 2s, 0-100 mph: 4s, 0-200 mph: 16s, peak hp: 1020
@@ -35,7 +36,7 @@ impl Templates for Car {
                 let torque_curve = |rpm| -387.669 * tanh((1.0 / 5000.0) * rpm as f64 - 1.98572) + 683.534;
                 let engine = Engine::new(1000, 23300, torque_curve);
                 let transmission = Transmission::new(7.5 ,vec![-1.0, 0.0, 1.0]);
-                let chassis = Chassis::new(0.2667, 2.9591, 0.0 /*??*/, 0.48, 2184.501, DriveWheels::All);
+                let chassis = Chassis::new(0.2667, 2.9591, 1.40, 0.48, 2184.501, DriveWheels::All);
                 Car::new(engine, transmission, chassis, 0.24, 10.2)
             }
         }

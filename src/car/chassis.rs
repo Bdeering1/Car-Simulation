@@ -19,14 +19,16 @@ pub struct Chassis {
 }
 
 impl Chassis {
-    pub fn new(wheel_radius: f64, wheel_base: f64, cg_height: f64, weight_ratio: f64, weight: f64, drive_wheels: DriveWheels) -> Self {
+    pub fn new(wheel_radius: f64, wheel_base: f64, height: f64, weight_ratio: f64, weight: f64, drive_wheels: DriveWheels) -> Self {
+        const CG_HEIGHT_RATIO: f64 = 0.45; 
+
         let front_wheels = WheelPair::new(wheel_radius, drive_wheels == DriveWheels::Front || drive_wheels == DriveWheels::All);
         let rear_wheels = WheelPair::new(wheel_radius, drive_wheels == DriveWheels::Rear || drive_wheels == DriveWheels::All);
         Chassis {
             front_wheels,
             rear_wheels,
             wheel_base,
-            cg_height,
+            cg_height: height * CG_HEIGHT_RATIO,
             static_load: (weight * weight_ratio, weight * (1.0 - weight_ratio)),
             torque_dist: (match drive_wheels { DriveWheels::Front => 1.0, DriveWheels::All => 0.5, _ => 0.0 },
                           match drive_wheels { DriveWheels::Rear => 1.0, DriveWheels::All => 0.5, _ => 0.0 },)

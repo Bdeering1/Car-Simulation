@@ -8,14 +8,18 @@ fn main() {
     let mut car = Car::from_template(CarType::AudiR8);
     car.transmission.gear = 2;
 
-    let mut time_passed: f32 = 0.0;
+    const TICKS_PER_SECOND: f64 = 10_000.0;
+    const DISPLAY_RATE: i32 = 100;  // number of ticks between each display update
+
+    let dt_step: f64 = 1.0 / TICKS_PER_SECOND;
+    let mut total_time: f64 = 0.0;
     loop {
-        car.update(0.01);
-        if (time_passed * 100.0) as i32 % 20 == 0 {
-            println!("{} time elapsed: {:.1}s", car, time_passed);
+        car.update(dt_step);
+        if (total_time * TICKS_PER_SECOND) as i32 % DISPLAY_RATE == 0 {
+            println!("{} time elapsed: {:.2}s", car, total_time);
             thread::sleep(time::Duration::from_millis(200));
         }
-        time_passed += 0.01;
-        time_passed = (time_passed * 100.0).round() / 100.0;
+        total_time += dt_step;
+        total_time = (total_time * TICKS_PER_SECOND).round() / TICKS_PER_SECOND;
     }
 }
