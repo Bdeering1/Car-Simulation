@@ -50,7 +50,7 @@ impl Car {
         if self.engine.rpm == self.engine.max_rpm {
             self.drive_force = 0.0
         } else {
-            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(1.0) * self.transmission.get_ratio(), self.velocity, dt).0;
+            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(1.0) * self.transmission.get_ratio()).0;
         }
         self.drive_force *= DRIVE_TRAIN_EFFICIENCY;
         self.drag = self.velocity.0.powf(2.0) * self.drag_coefficient;

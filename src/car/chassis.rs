@@ -19,9 +19,9 @@ pub struct Chassis {
 }
 
 impl Chassis {
-    pub fn new(wheel_radius: f64, wheel_base: f64, wheel_weight: f64, cg_height: f64, weight_ratio: f64, weight: f64, drive_wheels: DriveWheels) -> Self {
-        let front_wheels = WheelPair::new(wheel_radius, wheel_weight, drive_wheels == DriveWheels::Front || drive_wheels == DriveWheels::All);
-        let rear_wheels = WheelPair::new(wheel_radius, wheel_weight, drive_wheels == DriveWheels::Rear || drive_wheels == DriveWheels::All);
+    pub fn new(wheel_radius: f64, wheel_base: f64, cg_height: f64, weight_ratio: f64, weight: f64, drive_wheels: DriveWheels) -> Self {
+        let front_wheels = WheelPair::new(wheel_radius, drive_wheels == DriveWheels::Front || drive_wheels == DriveWheels::All);
+        let rear_wheels = WheelPair::new(wheel_radius, drive_wheels == DriveWheels::Rear || drive_wheels == DriveWheels::All);
         Chassis {
             front_wheels,
             rear_wheels,
@@ -33,10 +33,10 @@ impl Chassis {
         }
     }
 
-    pub fn get_wheel_force(&mut self, drive_force: f64, torque: f64, car_vel: (f64, f64), dt: f64) -> (f64, f64) {
+    pub fn get_wheel_force(&self, drive_force: f64, torque: f64) -> (f64, f64) {
         let (front_load, rear_load) = self.distribute_weight(drive_force);
-        let (front_force, rear_force) = (self.front_wheels.get_force(torque * self.torque_dist.0, front_load, car_vel, dt), 
-                                                   self.rear_wheels.get_force(torque * self.torque_dist.1, rear_load, car_vel, dt));
+        let (front_force, rear_force) = (self.front_wheels.get_force(torque * self.torque_dist.0, front_load), 
+                                                   self.rear_wheels.get_force(torque * self.torque_dist.1, rear_load));
 
         (front_force + rear_force, 0.0)
     }
