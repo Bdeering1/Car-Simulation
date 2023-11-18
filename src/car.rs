@@ -51,13 +51,7 @@ impl Car {
         if self.engine.rpm == self.engine.max_rpm {
             self.drive_force = 0.0
         } else {
-            let force_v:f64 = self.engine.get_torque(0.1) * self.transmission.get_ratio() * self.chassis.rear_wheels.radius;
-            let drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
-            let rolling_res = self.velocity.0 * self.rr_coefficient;
-            let drive_force = force_v - (drag + rolling_res);
-            let acc = drive_force/self.mass;
-            let virtual_vel:(f64, f64) = (self.velocity.0 + acc, 0.0);
-            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(0.1) * self.transmission.get_ratio(), virtual_vel, dt).0;
+            self.drive_force = self.chassis.get_wheel_force(self.drive_force, self.engine.get_torque(0.1) * self.transmission.get_ratio(), self.velocity, dt).0;
         }
         self.drive_force *= DRIVE_TRAIN_EFFICIENCY;
         self.drag = self.velocity.0.powf(2.0) * self.drag_coefficient;
