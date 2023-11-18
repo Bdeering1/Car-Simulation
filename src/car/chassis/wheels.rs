@@ -2,7 +2,7 @@ use libm::powf;
 
 pub struct WheelPair {
     pub radius: f64, // meters
-    pub ang_vel: f64, //rads/s
+    pub ang_vel: f64,
     pub mass: f64,
     inertia: f64,
     pub is_drive_wheel: bool,

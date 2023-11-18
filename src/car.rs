@@ -9,8 +9,6 @@ use engine::Engine;
 use transmission::Transmission;
 use chassis::Chassis;
 
-use crate::car::chassis::DriveWheels;
-
 pub struct Car {
     pub engine: Engine,
     pub transmission: Transmission,
@@ -62,13 +60,7 @@ impl Car {
         self.acceleration.0 = self.drive_force / self.mass; // m/s^2
         self.velocity.0 += self.acceleration.0 * dt; // m/s
 
-        let drive_wheel_rpm: f64 = match self.chassis.drive_wheels {
-            DriveWheels::Front => self.chassis.front_wheels.ang_vel * 9.549296585513721,
-            DriveWheels::Rear => self.chassis.rear_wheels.ang_vel * 9.549296585513721,
-            DriveWheels::All => ((self.chassis.front_wheels.ang_vel + self.chassis.rear_wheels.ang_vel) * 9.549296585513721)/2.0, //avg velocity between both sets of wheels
-        };
-
-        self.engine.rpm = ((drive_wheel_rpm /* wheel rev/s */ 
+        self.engine.rpm = ((self.velocity.0 / (2.0 * PI * self.chassis.front_wheels.radius) // wheel rev/s
                             * self.transmission.get_ratio() * 60.0) as u32) // engine rpm
                             .clamp(self.engine.idle_rpm, self.engine.max_rpm);
 

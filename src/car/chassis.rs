@@ -15,8 +15,7 @@ pub struct Chassis {
     wheel_base: f64,
     cg_height: f64,
     pub static_load: (f64, f64), // front, rear
-    torque_dist: (f64, f64),
-    pub drive_wheels: DriveWheels,
+    torque_dist: (f64, f64)
 }
 
 impl Chassis {
@@ -30,8 +29,7 @@ impl Chassis {
             cg_height,
             static_load: (weight * weight_ratio, weight * (1.0 - weight_ratio)),
             torque_dist: (match drive_wheels { DriveWheels::Front => 1.0, DriveWheels::All => 0.5, _ => 0.0 },
-                          match drive_wheels { DriveWheels::Rear => 1.0, DriveWheels::All => 0.5, _ => 0.0 },),
-            drive_wheels
+                          match drive_wheels { DriveWheels::Rear => 1.0, DriveWheels::All => 0.5, _ => 0.0 },)
         }
     }
 
